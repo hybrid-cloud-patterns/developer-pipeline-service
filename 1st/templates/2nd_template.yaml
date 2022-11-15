@@ -1,0 +1,77 @@
+---
+{{ define "1st-core.config" }}
+---
+{{ $currentScope := .}}
+---
+{{ $defaults := .Values.defaults -}}
+---
+{{ range $team := .Values.teams -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-2nd"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: "{{ $defaults.helmRepo }}"
+    targetRevision: "{{ $team.gitopsCoreVersion }}"
+    chart: "2nd-core"
+    helm:
+      parameters:
+        - name: "defaults.name"
+          value: "{{ $defaults.name }}"
+        - name: "defaults.tier"
+          value: "{{ $defaults.tier }}"
+        - name: "defaults.server"
+          value: "{{ $defaults.server }}"
+        - name: "defaults.helmRepo"
+          value: "{{ $defaults.helmRepo }}"
+        - name: "defaults.git.repo"
+          value: "{{ $defaults.repo }}"
+        - name: "defaults.namespace"
+          value: "{{ $defaults.namespace }}"
+        - name: "defaults.gitopsCoreVersion"
+          value: "{{ $defaults.gitopsCoreVersion }}"
+        - name: "team.name"
+          value: "{{ $team.name }}"
+        - name: "team.tier"
+          value: "{{ $team.tier }}"
+        - name: "team.gitopsCoreVersion"
+          value: "{{ $team.gitopsCoreVersion }}"
+        - name: "team.server"
+          value: "{{ $team.server }}"
+        - name: "team.adGroup"
+          value: "{{ $team.adGroup }}"        
+      values: |
+        {{- $configs := list "micro-environments" "infrastructure" "pipelines" "ocp-configuration"}}
+        {{- range $config := $configs }}
+          {{- with $currentScope}}
+            {{- printf "%s/%s/%s.yaml" $team.name $team.tier $config | .Files.Get | nindent 8 -}}
+          {{ end }}
+        {{ end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+    retry:
+      limit: 2
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+{{ end }}
+---
+{{ end }}
+---

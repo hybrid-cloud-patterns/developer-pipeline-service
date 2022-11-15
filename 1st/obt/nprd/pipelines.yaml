@@ -1,0 +1,124 @@
+pipelinenamespace:
+  - name: ob
+    ignoreResourceQuota: true
+    projects:
+      - name: pipelines
+        pipelines:
+            ##############
+            # CI PIPELINES
+            ##############
+          - name: adservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: adservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/adservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+              promote_env_list: dev-nonprod
+              cd_pipeline_url: git@github.com:pf-rh-online-boutique/online-boutique-cd.git
+          - name: cartservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: cartservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/cartservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: checkoutservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: checkoutservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/checkoutservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: currencyservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: currencyservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/currencyservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: emailservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: emailservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/emailservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: frontend
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: frontend
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/frontend
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: loadgenerator
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: loadgenerator
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/loadgenerator
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: paymentservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: paymentservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/paymentservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: productcatalogservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: productcatalogservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/productcatalogservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: recommendationservice
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: recommendationservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/recommendationservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+          - name: shippingservice-ci
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: shippingservice
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/shippingservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+            ##############
+            # CD PIPELINES
+            ##############
+          - name: online-boutique-cd
+            chart: gitops-micro-build
+            targetRevision: 3.3.6
+            values:
+              name: online-boutique-cd-gitops-micro-build
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+              protected_branches:
+              - dev-nonprod
+              - uat-nonprod

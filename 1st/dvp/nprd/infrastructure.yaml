@@ -1,0 +1,31 @@
+infrastructure:
+  - name: sealed-secrets
+    targetRevision: "3.0.8"
+    chart: "sealed-secrets"
+    namespace: "cloud-infra"
+    path: ''
+    values:
+      settings:
+        ingressHosts: ["sealed.secrets.apps.foster-aro-dev.australiaeast.aroapp.io"]
+
+  - name: reloader
+    targetRevision: "3.0.8"
+    chart: "reloader"
+    namespace: "cloud-infra"
+    path: ''
+    values: {}
+    
+  - name: argocd-rollouts
+    targetRevision: "3.0.8"
+    chart: "argocd-rollouts"
+    namespace: "openshift-gitops"
+    path: ''
+    values: {}
+
+  - name: datadog-operator
+    targetRevision: "0.0.8"
+    chart: "datadog-operator"
+    namespace: "cloud-infra"
+    path: ''
+    values: {}
+

@@ -1,0 +1,45 @@
+pipelinenamespace:
+  - name: cloud
+    ignoreResourceQuota: true
+    projects:
+      - name: pipelines
+        pipelines:
+          - name: tek-pipe-hp
+            chart: helm-promote
+            targetRevision: 3.2.6
+            values:
+              name: tekton-pipeline-charts-helm-promote
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              helm_repo_url: https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+              protected_branches:
+              - main
+          - name: argo-base-hp
+            chart: helm-promote
+            targetRevision: 3.2.6
+            values:
+              name: argocd-base-charts-helm-promote
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              helm_repo_url: https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom
+              protected_branches:
+              - main
+          # - name: tf-bld
+          #   chart: buildah-build
+          #   targetRevision: 3.2.1
+          #   values:
+          #     image_to_build: terraform-awscli-go
+          #     source_git_url: git@gitlab.com:redhat-blackbelt/pipeline-images/terraform-awscli-go.git
+          #     source_git_revision: main
+          #     persistant_volume_claim_size: 100Mi
+          - name: liqui-bld
+            chart: buildah-build
+            targetRevision: 3.3.8
+            values:
+              name: liqui-bld
+              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/liquibase-nodejs
+              persistant_volume_claim_size: 100Mi
+              storage_class: managed-premium-custom

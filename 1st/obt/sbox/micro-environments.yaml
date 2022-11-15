@@ -1,0 +1,17 @@
+
+repositories:
+  - https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+
+microenvironments:
+  - name: ob
+    requests:
+      cpu: 2
+      memory: 8Gi
+    limits:
+      cpu: 12
+      memory: 20Gi
+    projects:
+      - name: sbox
+        labels: |
+          name: ob-sbox
+ 
