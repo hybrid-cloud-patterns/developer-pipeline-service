@@ -1,0 +1,91 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: custom-liquibase-task
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: custom-liquibase-task
+spec:
+  description: >-
+    Liquibase wrapper task.
+  params:
+  - default: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/liquibase-nodejs:4.1.3
+    description: helm image to be used
+    name: image
+    type: string
+  - description: The event type
+    name: object_kind
+    type: string
+  - description: The event type on pull request 
+    name: action
+    type: string
+  - description: the git ssh url
+    name: git_ssh_url
+    type: string
+  - description: The source branch name
+    name: source_branch
+    type: string
+  - description: The target branch name
+    name: target_branch
+    type: string
+  - description: The commit sha
+    name: merge_commit_sha
+    type: string
+  - description: User name who generated pipeline.
+    name: user_name
+    type: string
+  - description: the gitlab project id
+    name: project_id
+    type: string
+  - description: the gitlab project id
+    name: ref
+    type: string
+  - description: The liquibase command to run.
+    name: command
+    type: string
+  steps:  
+  - name: dummy
+    image: $(params.image)
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi 
+      requests:
+        cpu: 500m
+        memory: 1Gi  
+    script: |
+      #!/bin/bash
+      echo "###############################################"
+      echo "###############################################"
+      echo "### project_id = $(params.project_id)"
+      echo "### user_name = $(params.user_name)"
+      echo "### object_kind = $(params.object_kind)"
+      echo "### action = $(params.action)"
+      echo "### git_ssh_url = $(params.git_ssh_url)"
+      echo "### source_branch = $(params.source_branch)"
+      echo "### target_branch = $(params.target_branch)"
+      echo "### merge_commit_sha = $(params.merge_commit_sha)"
+      echo "### ref = $(params.ref)"
+      echo "### command = $(params.command)"
+      echo "###############################################"
+      echo "###############################################"
+      . /workspace/output/.build-variables.env
+      if [ "$(params.command)" == "status" ] ; then
+        /usr/bin/node /src/index.js status
+      fi
+      if [ "$(params.command)" == "validate" ] ; then
+        /usr/bin/node /src/index.js validate
+      fi
+      if [ "$(params.command)" == "presql" ] ; then
+        /usr/bin/node /src/index.js presql
+      fi
+      if [ "$(params.command)" == "updateSQL" ] ; then
+        /usr/bin/node /src/index.js updateSQL
+      fi
+      if [ "$(params.command)" == "update" ] ; then
+        /usr/bin/node /src/index.js update
+      fi
+  workspaces:
+  - name: output

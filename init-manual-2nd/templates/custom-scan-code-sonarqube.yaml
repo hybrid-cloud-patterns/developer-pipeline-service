@@ -1,0 +1,46 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: scan-code-sonarqube
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: scan-code-sonarqube
+spec:
+  description: >-
+    Uses the Red Hat Advanced Cluster Security APIs to scan
+    a container image against the current build policies for the cluster.
+  params:
+  - name: SCAN_IMAGE
+    description: Image containing the sonarqube scan
+    default: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:3.71.0-5
+
+  steps:
+  - name: scan
+    image: $(params.SCAN_IMAGE)
+    env:
+      - name: sonar-token-catalog
+        valueFrom:
+          secretKeyRef:
+            name: sonar-tokens
+            key: sonar-token-catalog
+      - name: sonar-token-inventory
+        valueFrom:
+          secretKeyRef:
+            name: sonar-tokens
+            key: sonar-token-inventory
+      - name: sonar-token-gateway
+        valueFrom:
+          secretKeyRef:
+            name: sonar-tokens
+            key: sonar-token-gateway
+    script: |
+      set -x
+      pwd
+      ls -alrt
+      chmod 777 sonar-project.sh
+      if [ -f "sonar-project.sh" ]; then
+        ./sonar-project.sh
+      fi
+     

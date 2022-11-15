@@ -1,0 +1,110 @@
+{{- if .Values.blueGreen.enabled -}}
+  {{- if .Values.blueGreen.green.enabled }}
+{{- $fullName := include "app-charts.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app-charts.fullname" . }}-green
+  labels:
+    app: {{ $fullName }}-green
+    version: green
+  annotations:
+    {{- if .Values.reloader }}
+    reloader.stakater.com/auto: "true"
+    {{- end }}
+spec:
+  revisionHistoryLimit: 1
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.blueGreen.green.replicaCount | default .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "app-charts.selectorLabels" . | nindent 6 }}
+      version: green
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        sidecar.istio.io/inject: 'true'
+      labels:
+        {{- include "app-charts.selectorLabels" . | nindent 8 }}
+        version: green
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "app-charts.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.initContainers }}
+      initContainers:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.blueGreen.green.tag | default .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.containerPort }}
+              protocol: TCP
+            {{- with .Values.livenessProbe }}
+          livenessProbe:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}          
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- if .Values.forcedRestart }}
+            - name: FORCED_RESTART
+              value: {{ now | quote }}
+            {{- end }}
+            {{- range $k, $v := .Values.sealedSecrets.values}}
+            - name: {{ $k }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "app-charts.fullname" $ }}-sealed-secret
+                  key: {{ $k }}
+            {{- end }}
+            {{- range $k, $v := .Values.externalSecrets.values}}
+            - name: {{ $k }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "app-charts.fullname" $ }}-aws-external-secret
+                  key: {{ $k }}
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}
+{{- end }}

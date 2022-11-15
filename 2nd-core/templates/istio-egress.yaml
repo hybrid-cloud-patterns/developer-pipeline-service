@@ -1,0 +1,84 @@
+---
+{{ $team := .Values.team }}
+---
+{{ $defaults := .Values.defaults -}}
+---
+{{ range $env := .Values.microenvironments -}}
+---
+{{ range $ns := $env.projects -}}
+---
+{{ if $ns.istioEgressGateway }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $env.name }}-istioeg-{{ $ns.name }}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: "{{ $team.name }}-{{ $team.tier }}-users"
+  source:
+    repoURL: "{{ $defaults.helmRepo }}"
+    targetRevision: "{{ $ns.istioEgressGateway.targetRevision }}"
+    chart: "istio-egress-gateway"
+    path: ""
+    helm:
+      values: |
+        settings:
+          {{- if not $env.useNamespaceNameOnly }}
+          namespace: {{ $env.name }}-{{ $ns.name }}
+          {{- else }}
+          namespace: "{{ $ns.name }}"
+          {{- end }}
+          {{- toYaml $ns.istioEgressGateway | nindent 10 }}
+  destination:
+    server: "{{ $team.server }}"
+    {{- if not $env.useNamespaceNameOnly }}
+    namespace: {{ $env.name }}-{{ $ns.name }}
+    {{- else }}
+    namespace: "{{ $ns.name }}"
+    {{- end }}
+  syncPolicy:
+    automated:
+      prune: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=false
+    retry:
+     limit: 1 
+     backoff:
+       duration: 5s 
+       factor: 2 
+       maxDuration: 3m
+  ignoreDifferences:
+  - group: autoscaling 
+    kind: HorizontalPodAutoscaler
+    jsonPointers:
+    - /status/currentReplicas
+    - /status/desiredReplicas
+    - /metadata/generation
+    - /spec/minReplicas
+  - group: apps 
+    kind: Deployment
+    jsonPointers:
+    - /metadata/generation
+    - /spec/replicas
+    - /metadata/annotations
+  - group: policy
+    kind: PodDisruptionBudget
+    jsonPointers:
+    - /metadata/generation
+    - /status/currentHealthy
+    - /status/desiredHealthy
+    - /status/expectedPods
+    - /status/disruptionsAllowed
+{{ end }}
+---
+{{ end }}
+---
+{{ end }}
+
+

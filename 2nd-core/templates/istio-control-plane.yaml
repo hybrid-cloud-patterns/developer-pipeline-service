@@ -1,0 +1,65 @@
+---
+{{ $team := .Values.team }}
+---
+{{ $defaults := .Values.defaults -}}
+---
+{{ range $env := .Values.microenvironments -}}
+---
+{{ range $ns := $env.projects -}}
+---
+{{- if $ns.serviceMeshControlPlane }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $env.name }}-istiocp-{{ $ns.name }}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: "{{ $team.name }}-{{ $team.tier }}-admin"
+  source:
+    repoURL: "{{ $defaults.helmRepo }}"
+    targetRevision: "{{ $ns.serviceMeshControlPlane.targetRevision }}"
+    chart: "istio-service-mesh-control-plane"
+    path: ""
+    helm:
+      values: |
+        settings:
+          {{- toYaml $ns.serviceMeshControlPlane | nindent 10 }}
+  destination:
+    server: "{{ $team.server }}"
+    {{- if not $env.useNamespaceNameOnly }}
+    namespace: {{ $env.name }}-{{ $ns.name }}
+    {{- else }}
+    namespace: "{{ $ns.name }}"
+    {{- end }}
+  syncPolicy:
+    automated:
+      prune: false
+    syncOptions: 
+      - Validate=false 
+      - CreateNamespace=false 
+    retry:
+     limit: 0 
+     backoff:
+       duration: 5s
+       factor: 2
+       maxDuration: 3m
+  ignoreDifferences:
+  - group: maistra.io/v2
+    kind: ServiceMeshControlPlane
+    jsonPointers:
+    - /metadata
+    - /spec
+---
+{{ end }}
+---
+{{ end }}
+---
+{{ end }}
+---
+
+

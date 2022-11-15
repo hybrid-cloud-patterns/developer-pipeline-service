@@ -1,0 +1,17 @@
+{{ range $ns := .Values.projects -}}
+---
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  name: "{{ $ns.name }}"
+  {{- if $ns.annotations }}
+  annotations:
+    {{- toYaml $ns.annotations | trimPrefix "|" | indent 2 }}
+  {{ end }}
+  labels:
+  {{- if $ns.labels }}
+    {{- toYaml $ns.labels | trimPrefix "|" | indent 2 }}
+  {{ end }}
+---
+{{ end -}}
+
