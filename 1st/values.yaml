@@ -3,23 +3,23 @@ defaults:
   server: https://kubernetes.default.svc
   repo: git@github.com:foster-rh/gitops.git
   helmRepo: "https://gitlab.com/api/v4/projects/40182895/packages/helm/stable"
-  gitopsCoreVersion: 5.1.7
+  gitopsCoreVersion: 5.2.7
   
 teams:
   - name: obt
     tier: nprd
     server: https://kubernetes.default.svc
-    gitopsCoreVersion: 5.1.7
-    adGroup: payments
+    gitopsCoreVersion: 5.2.7
+    adGroup: 13cec8b0-086c-4024-b7ad-8579f8fe9410
 
   - name: obt
     tier: sbox
     server: https://kubernetes.default.svc
-    gitopsCoreVersion: 5.1.7
-    adGroup: payments
+    gitopsCoreVersion: 5.2.7
+    adGroup: cloud
 
   - name: dvp
     tier: nprd
     server: https://kubernetes.default.svc
-    gitopsCoreVersion: 5.1.7
+    gitopsCoreVersion: 5.2.7
     adGroup: cloud

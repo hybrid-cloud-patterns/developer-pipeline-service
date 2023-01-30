@@ -29,3 +29,18 @@ infrastructure:
     path: ''
     values: {}
 
+  - name: datadog-operator
+    targetRevision: "0.0.8"
+    chart: "datadog-operator"
+    namespace: "cloud-infra"
+    path: ''
+    values: {}
+
+  - name: ad-auth
+    targetRevision: "0.0.1"
+    chart: "ad-auth"
+    path: ''
+    namespace: openshift-config
+    values:
+      clientSecret: Q0cwOFF+UU9sd1VpcE1tSE1WMDhPaWdMQVhXTnhwcURENTFJeWJwRw==
+      clientID: 7abd5eb1-abe8-45ec-abe8-28506e76f430
