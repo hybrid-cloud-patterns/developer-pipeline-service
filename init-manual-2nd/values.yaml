@@ -1,3 +1,4 @@
 git:
   repo: git@github.com:foster-rh/gitops.git
   revision: main
+github : true

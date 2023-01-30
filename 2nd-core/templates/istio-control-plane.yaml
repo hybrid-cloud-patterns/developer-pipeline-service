@@ -43,7 +43,7 @@ spec:
       - Validate=false 
       - CreateNamespace=false 
     retry:
-     limit: 0 
+     limit: 5
      backoff:
        duration: 5s
        factor: 2

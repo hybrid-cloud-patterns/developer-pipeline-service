@@ -1,0 +1,6 @@
+apiVersion: v2
+description: A Helm chart to deploy subscriptions.
+keywords:
+- pattern
+name: subscriptions
+version: 0.0.1

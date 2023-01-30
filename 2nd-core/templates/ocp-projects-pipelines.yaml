@@ -5,12 +5,14 @@
 ---
 {{ range $pip := .Values.pipelinenamespace -}}
 ---
+{{ range $ns := $pip.projects -}}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: "{{ $team.name }}-{{ $team.tier }}-{{ $pip.name }}-pipelines"
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $pip.name }}-{{ $ns.name }}-pipelines"
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "1"
   namespace: openshift-gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -18,7 +20,7 @@ spec:
   project: "{{ $team.name }}-{{ $team.tier }}-users"
   source:
     repoURL: "{{ $defaults.helmRepo }}"
-    targetRevision: "3.1.6"
+    targetRevision: "3.1.9"
     chart: "projects"
     path: ""
     helm:
@@ -32,8 +34,8 @@ spec:
         - name: "project"
           value: "{{ $team.name }}-{{ $team.tier }}-users"
       values: |
+        adGroup: "{{ $team.adGroup }}"
         projects:
-          {{- range $ns := $pip.projects }}
           {{- if not $pip.useProjectsNameOnly }}
           - name: {{ $pip.name}}-{{ $ns.name }}
           {{- else }}
@@ -103,7 +105,6 @@ spec:
               memory: {{ $pip.limits.memory }}
           {{- end }}
           {{- end }}
-          {{- end }}
   destination:
     server: "{{ $team.server }}"
   syncPolicy:
@@ -118,6 +119,8 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+---
+{{ end }}
 ---
 {{ end }}
 ---

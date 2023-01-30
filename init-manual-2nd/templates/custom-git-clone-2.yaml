@@ -16,6 +16,9 @@ spec:
     These Tasks are Git tasks to work with repositories used by other tasks in your Pipeline.
     The git-clone Task will clone a repo from the provided url into the output Workspace. By default the repo will be cloned into the root of your Workspace. You can clone into a subdirectory by setting this Task's subdirectory param. This Task also supports sparse checkouts. To perform a sparse checkout, pass a list of comma separated directory patterns to this Task's sparseCheckoutDirectories param.
   params:
+  - description: Folder to do the work in.
+    name: folder
+    type: string
   - description: Repository URL to clone from.
     name: url
     type: string
@@ -111,6 +114,8 @@ spec:
     name: url
   steps:
   - env:
+    - name: FOLDER
+      value: $(params.folder)
     - name: HOME
       value: $(params.userHome)
     - name: PARAM_URL
@@ -173,6 +178,8 @@ spec:
       echo "### source_branch = $(params.source_branch)"
       echo "### target_branch = $(params.target_branch)"
       echo "### merge_commit_sha = $(params.merge_commit_sha)"
+      echo "### ref = $(params.ref)"
+      echo "### folder = ${FOLDER}"
       echo "###############################################"
       echo "###############################################"
 
@@ -194,26 +201,31 @@ spec:
         chmod -R 400 "${PARAM_USER_HOME}"/.ssh/*
       fi
 
-      CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}"
-
-      cleandir() {
-        # Delete any existing contents of the repo directory if it exists.
-        #
-        # We don't just "rm -rf ${CHECKOUT_DIR}" because ${CHECKOUT_DIR} might be "/"
-        # or the root of a mounted volume.
-        if [ -d "${CHECKOUT_DIR}" ] ; then
-          # Delete non-hidden files and directories
-          rm -rf "${CHECKOUT_DIR:?}"/*
-          # Delete files and directories starting with . but excluding ..
-          rm -rf "${CHECKOUT_DIR}"/.[!.]*
-          # Delete files and directories starting with .. plus any other character
-          rm -rf "${CHECKOUT_DIR}"/..?*
-        fi
-      }
-
-      if [ "${PARAM_DELETE_EXISTING}" = "true" ] ; then
-        cleandir
+      CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${FOLDER}/base"
+      if [ -d ${WORKSPACE_OUTPUT_PATH}/${FOLDER} ]; then
+        rm -rf ${WORKSPACE_OUTPUT_PATH}/${FOLDER}
       fi
+      mkdir "${WORKSPACE_OUTPUT_PATH}/${FOLDER}"
+      mkdir "${WORKSPACE_OUTPUT_PATH}/${FOLDER}/base"
+
+      # cleandir() {
+      #   # Delete any existing contents of the repo directory if it exists.
+      #   #
+      #   # We don't just "rm -rf ${CHECKOUT_DIR}" because ${CHECKOUT_DIR} might be "/"
+      #   # or the root of a mounted volume.
+      #   if [ -d "${CHECKOUT_DIR}" ] ; then
+      #     # Delete non-hidden files and directories
+      #     rm -rf "${CHECKOUT_DIR:?}"/*
+      #     # Delete files and directories starting with . but excluding ..
+      #     rm -rf "${CHECKOUT_DIR}"/.[!.]*
+      #     # Delete files and directories starting with .. plus any other character
+      #     rm -rf "${CHECKOUT_DIR}"/..?*
+      #   fi
+      # }
+
+      # if [ "${PARAM_DELETE_EXISTING}" = "true" ] ; then
+      #   cleandir
+      # fi
 
       test -z "${PARAM_HTTP_PROXY}" || export HTTP_PROXY="${PARAM_HTTP_PROXY}"
       test -z "${PARAM_HTTPS_PROXY}" || export HTTPS_PROXY="${PARAM_HTTPS_PROXY}"

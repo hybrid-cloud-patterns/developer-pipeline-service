@@ -26,9 +26,14 @@ spec:
       server: "https://kubernetes.default.svc"
   roles:
     - name: admin
-      description: "admin privilleges for project `{{ $team.name }}-{{ $team.tier }}-admin`"
+      description: "admin privilleges for project {{ $team.name }}-{{ $team.tier }}-admin"
       policies:
         - "p, proj:{{ $team.name }}-{{ $team.tier }}-admin:admin, applications, *, {{ $team.name }}-{{ $team.tier }}-admin/*, allow"
-        - "p, proj:{{ $team.name }}-{{ $team.tier }}-admin:admin, teams, get, {{ $team.name }}-{{ $team.tier }}-admin, allow"
       groups:
-        - "APP.ARGO.{{ $team.name | upper }}-{{ $team.tier | upper }}-ADMIN.ADMIN.GG"
+        - "APP.ARGO.ADMIN.ADMIN.GG"
+    # - name: admin-deny
+    #   description: "Application teams privilleges for project {{ $team.name }}-{{ $team.tier }}-users"
+    #   policies:
+    #     - "p, proj:{{ $team.name }}-{{ $team.tier }}-admin:admin-deny, applications, *, {{ $team.name }}-{{ $team.tier }}-admin/*, deny"
+    #   groups:
+    #     - "{{ $team.adGroup }}"

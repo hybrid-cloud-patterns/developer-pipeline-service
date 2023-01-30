@@ -19,6 +19,9 @@ spec:
   description: |-
     This task can be used to perform git operations.
   params:
+  - description: Folder to do the work in.
+    name: folder
+    type: string
   - default: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
     description: |
       The base image for the task.
@@ -101,33 +104,39 @@ spec:
       git config --global user.email "$(params.GIT_USER_EMAIL)"
       git config --global user.name "$(params.GIT_USER_NAME)"
 
-      cleandir() {
-        # Delete any existing contents of the repo directory if it exists.
-        # We don't just "rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be "/"
-        # or the root of a mounted volume.
-        if [ -d "${CHECKOUT_DIR}" ] ; then
-          # Delete non-hidden files and directories
-          rm -rf "${CHECKOUT_DIR:?}"/*
-          rm -rf "${CHECKOUT_DIR}"/*
-          # Delete files and directories starting with . but excluding ..
-          rm -rf "${CHECKOUT_DIR}"/.[!.]*
-          # Delete files and directories starting with .. plus any other character
-          rm -rf "${CHECKOUT_DIR}"/..?*
-        fi
-      }
-      cleandir
+      # cleandir() {
+      #   # Delete any existing contents of the repo directory if it exists.
+      #   # We don't just "rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be "/"
+      #   # or the root of a mounted volume.
+      #   if [ -d "${CHECKOUT_DIR}" ] ; then
+      #     # Delete non-hidden files and directories
+      #     rm -rf "${CHECKOUT_DIR:?}"/*
+      #     rm -rf "${CHECKOUT_DIR}"/*
+      #     # Delete files and directories starting with . but excluding ..
+      #     rm -rf "${CHECKOUT_DIR}"/.[!.]*
+      #     # Delete files and directories starting with .. plus any other character
+      #     rm -rf "${CHECKOUT_DIR}"/..?*
+      #   fi
+      # }
+      # cleandir
       
       echo "git $(params.cd_pipeline_url)"
       echo 'ssh -i ~/.ssh/id_ssh-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $*' > /tmp/ssh
       chmod +x /tmp/ssh
-      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.cd_pipeline_url)"
-      cd *
-      pwd
-      ls -alrt
+    
+      # GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.cd_pipeline_url)"
+      # cd *
+      # pwd
+      # ls -alrt
+      cd /workspace/output/$(params.folder)
+      if [ -d custom-promote ]; then
+        rm -rf custom-promote
+      fi
+      mkdir custom-promote;cd custom-promote
+      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.cd_pipeline_url)" .
+
       envs=$(echo $(params.promote_env_list) | tr ":" "\n")
       echo "$(params.promote_env_list)"
-      # readarray -d | -t strarr <<< "$(params.promote_env_list)"
-      # for (( n=0; n < ${#strarr[*]}; n++))
       for env in $envs
       do
         echo "Promoting to environment - $env"
@@ -139,6 +148,7 @@ spec:
           git diff-index --quiet HEAD || git commit -a -m 'SINGLEMICRO:$(params.name)'
           GIT_SSH='/tmp/ssh' git remote set-url --push origin "$(params.cd_pipeline_url)"
           GIT_SSH='/tmp/ssh' git push origin $env
+          # sleep 120
       done      
     workingDir: $(workspaces.output.path)
   workspaces:

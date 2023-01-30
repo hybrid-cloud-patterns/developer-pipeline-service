@@ -1,0 +1,4 @@
+apiVersion: v2
+description: A Helm chart to build and deploy ansible playbook jobs.
+name: cron-jobs
+version: 0.0.1

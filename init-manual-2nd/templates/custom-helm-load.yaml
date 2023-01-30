@@ -13,6 +13,9 @@ spec:
   description: These tasks will install / upgrade a helm chart into your Kubernetes
     / OpenShift Cluster using Helm
   params:
+  - description: Folder to do the work in.
+    name: folder
+    type: string
   - description: The helm repo to upload to - add repo
     name: helm_repo_url
     type: string
@@ -53,11 +56,10 @@ spec:
       echo "### project_id = $(params.project_id)"
       echo "###############################################"
       echo "###############################################"
-
+      cd /workspace/output/$(params.folder)/base
       apk add git
       helm plugin install https://github.com/chartmuseum/helm-push
       helm repo add --username pafoster --password glpat-rhvriFVzgsku7BVsspcT helm-repo $(params.helm_repo_url)
-      cd workspace/source
       ls -lart 
       for directory in */; do
         name=$(cat $directory/Chart.yaml | grep '^name:'| awk '{print $2}')
@@ -75,5 +77,5 @@ spec:
         fi
       done
   workspaces:
-  - name: source
+  - name: output
 

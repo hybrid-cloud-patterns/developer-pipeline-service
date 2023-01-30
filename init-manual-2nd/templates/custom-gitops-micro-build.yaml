@@ -16,8 +16,6 @@ metadata:
     app.kubernetes.io/version: "0.3"
     operator.tekton.dev/provider-type: community
   name: custom-gitops-micro-build
-  resourceVersion: "955560"
-  uid: 9a9feaba-3f43-46f7-b1bc-526dc2137310
 spec:
   description: |-
     This task can be used to perform git operations.
@@ -27,6 +25,9 @@ spec:
     description: |
       The base image for the task.
     name: BASE_IMAGE
+    type: string
+  - description: Folder to do the work in.
+    name: folder
     type: string
   - default: root
     description: |
@@ -108,7 +109,7 @@ spec:
     resources: {}
     script: |
       #!/usr/bin/env sh
-
+      set -x
       echo "###############################################"
       echo "###############################################"
       echo "### project_id = $(params.project_id)"
@@ -119,7 +120,7 @@ spec:
       echo "### target_branch = $(params.target_branch)"
       echo "### merge_commit_sha = $(params.merge_commit_sha)"
       echo "### action = $(params.action)"
-      echo "### action = $(params.ref)"
+      echo "### ref = $(params.ref)"
       echo "###############################################"
       echo "###############################################"
 
@@ -133,42 +134,44 @@ spec:
       git config --global user.email "$(params.GIT_USER_EMAIL)"
       git config --global user.name "$(params.GIT_USER_NAME)"
 
-      cleandir() {
-        # Delete any existing contents of the repo directory if it exists.
-        # We don't just "rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be "/"
-        # or the root of a mounted volume.
-        if [ -d "${CHECKOUT_DIR}" ] ; then
-          # Delete non-hidden files and directories
-          rm -rf "${CHECKOUT_DIR:?}"/*
-          rm -rf "${CHECKOUT_DIR}"/*
-          # Delete files and directories starting with . but excluding ..
-          rm -rf "${CHECKOUT_DIR}"/.[!.]*
-          # Delete files and directories starting with .. plus any other character
-          rm -rf "${CHECKOUT_DIR}"/..?*
-        fi
-      }
+      # cleandir() {
+      #   # Delete any existing contents of the repo directory if it exists.
+      #   # We don't just "rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be "/"
+      #   # or the root of a mounted volume.
+      #   if [ -d "${CHECKOUT_DIR}" ] ; then
+      #     # Delete non-hidden files and directories
+      #     rm -rf "${CHECKOUT_DIR:?}"/*
+      #     rm -rf "${CHECKOUT_DIR}"/*
+      #     # Delete files and directories starting with . but excluding ..
+      #     rm -rf "${CHECKOUT_DIR}"/.[!.]*
+      #     # Delete files and directories starting with .. plus any other character
+      #     rm -rf "${CHECKOUT_DIR}"/..?*
+      #   fi
+      # }
 
-      cleandir
-      export GIT_REPO_NAME="online-boutique-cd"
+      # cleandir
+
+      cd /workspace/output/$(params.folder)/base
+      . ./.build-variables.env
+      cd ..
+      #export GIT_REPO_NAME="online-boutique-cd"
       echo "git $(params.git_ssh_url)"
       echo 'ssh -i ~/.ssh/id_ssh-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $*' > /tmp/ssh
       chmod +x /tmp/ssh
-      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.git_ssh_url)"
+      #GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.git_ssh_url)"
       mkdir deploy;cd deploy
-      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.git_ssh_url)"
-      cd ..
-      . online-boutique-cd/.build-variables.env
-      cd ${GIT_REPO_NAME}
-      git checkout $ENV-$TIER
-      cd ../deploy/${GIT_REPO_NAME}
-      git checkout $ENV-$TIER
-      cd ../..
-      for micros in `ls ${GIT_REPO_NAME}|grep -i app-`
+      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.git_ssh_url)" .
+      cd ../base
+      branch=`echo "$(params.ref)"| cut -d'/' -f 3`
+      git checkout $branch
+      cd ../deploy
+      git checkout $branch
+      #. online-boutique-cd/.build-variables.env
+      
+      for micros in `ls ../base|grep -i app-`
       do
         echo "Processing microservice - $micros"
-
         # #CHECK IF DEPLOY BRANCH EXISTS. IF NOT, CREATE IT LOCALLY
-        cd deploy/${GIT_REPO_NAME}
         DEPLOY_BRANCH_EXISTS=$(GIT_SSH='/tmp/ssh' git ls-remote --heads "$(params.git_ssh_url)" $ENV-$TIER-$micros | wc -l)
         if [ $DEPLOY_BRANCH_EXISTS -eq 1 ]
         then
@@ -181,10 +184,10 @@ spec:
         rm -rf *
         mkdir app
         mkdir app/conf
-        cp -r ../../${GIT_REPO_NAME}/.gitops-data/* app
-        cp ../../${GIT_REPO_NAME}/$micros/helm-values.conf app/conf/helm-values-original.conf
+        cp -r ../base/.gitops-data/* app
+        cp ../base/$micros/helm-values.conf app/conf/helm-values-original.conf
         . app/conf/helm-values-original.conf
-        cp ../../${GIT_REPO_NAME}/$micros/helm-values.template app/conf
+        cp ../base/$micros/helm-values.template app/conf
         envsubst < app/conf/helm-values.template > app/conf/helm-values.conf
         envsubst < app/values_original.yaml > app/values.yaml
         cat app/values.yaml
@@ -192,7 +195,6 @@ spec:
         git diff-index --quiet HEAD || git commit -m 'Updating microservice variables.'
         GIT_SSH='/tmp/ssh' git remote set-url --push origin "$(params.git_ssh_url)"
         GIT_SSH='/tmp/ssh' git push origin $ENV-$TIER-$micros
-        cd ../..
       done
     workingDir: $(workspaces.output.path)
   workspaces:

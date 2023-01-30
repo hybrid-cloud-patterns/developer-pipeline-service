@@ -49,7 +49,7 @@ spec:
       a sparse checkout.
     name: sparseCheckoutDirectories
     type: string
-  - default: "true"
+  - default: "false"
     description: Clean out the contents of the destination directory if it already
       exists before cloning.
     name: deleteExisting
@@ -235,7 +235,7 @@ spec:
         chmod -R 400 "${PARAM_USER_HOME}"/.ssh/*
       fi
 
-      CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}"
+      CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}/$branch"
 
       cleandir() {
         # Delete any existing contents of the repo directory if it exists.

@@ -5,12 +5,14 @@
 ---
 {{ range $env := .Values.microenvironments -}}
 ---
+{{ range $ns := $env.projects -}}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: "{{ $team.name }}-{{ $team.tier }}-{{ $env.name }}"
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $env.name }}-{{ $ns.name }}"
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "1"
   namespace: openshift-gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -18,7 +20,7 @@ spec:
   project: "{{ $team.name }}-{{ $team.tier }}-users"
   source:
     repoURL: "{{ $defaults.helmRepo }}"
-    targetRevision: "3.1.6"
+    targetRevision: "3.1.9"
     chart: "projects"
     path: ""
     helm:
@@ -32,8 +34,8 @@ spec:
         - name: "project"
           value: "{{ $team.name }}-{{ $team.tier }}-users"
       values: |
+        adGroup: "{{ $team.adGroup }}"
         projects:
-          {{- range $ns := $env.projects }}
           {{- if not $env.useProjectsNameOnly }}
           - name: {{ $env.name}}-{{ $ns.name }}
           {{- else }}
@@ -53,7 +55,6 @@ spec:
               cpu: {{ $env.limits.cpu }}
               memory: {{ $env.limits.memory }}
           {{- end }}
-          {{- end }}
   destination:
     server: "{{ $team.server }}"
   syncPolicy:
@@ -63,7 +64,7 @@ spec:
       - Validate=false
       - CreateNamespace=true 
     retry:
-      limit: 2
+      limit: 5
       backoff:
         duration: 5s
         factor: 2
@@ -71,5 +72,6 @@ spec:
 ---
 {{ end }}
 ---
-
+{{ end }}
+---
 
