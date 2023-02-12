@@ -28,7 +28,7 @@ microenvironments:
           name: cloud-infra
 
 repositories:
-  - https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+  - https://gitlab.com/api/v4/projects/37447132/packages/helm/stable
 
 
 

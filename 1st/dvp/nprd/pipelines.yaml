@@ -9,10 +9,10 @@ pipelinenamespace:
             targetRevision: 4.0.5
             values:
               name: tekton-pipeline-charts-helm-promote
-              domain: apps.foster-aro-dev.australiaeast.aroapp.io
-              helm_repo_url: https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              helm_repo_url: https://gitlab.com/api/v4/projects/37447132/packages/helm/stable
               persistant_volume_claim_size: 100Mi
-              storage_class: managed-premium
+              storage_class: gp2
               protected_branches:
               - main
           - name: argo-base-hp
@@ -20,10 +20,10 @@ pipelinenamespace:
             targetRevision: 4.0.5
             values:
               name: argocd-base-charts-helm-promote
-              domain: apps.foster-aro-dev.australiaeast.aroapp.io
-              helm_repo_url: https://gitlab.com/api/v4/projects/40182895/packages/helm/stable
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              helm_repo_url: https://gitlab.com/api/v4/projects/37447132/packages/helm/stable
               persistant_volume_claim_size: 100Mi
-              storage_class: managed-premium
+              storage_class: gp2
               protected_branches:
               - main
           # - name: tf-bld
@@ -39,7 +39,7 @@ pipelinenamespace:
             targetRevision: 4.0.8
             values:
               name: liqui-bld
-              domain: apps.foster-aro-dev.australiaeast.aroapp.io
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
               image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/liquibase-nodejs
               persistant_volume_claim_size: 100Mi
-              storage_class: managed-premium
+              storage_class: gp2
