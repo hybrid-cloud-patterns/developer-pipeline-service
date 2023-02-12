@@ -16,7 +16,7 @@ pipelinenamespace:
               image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/adservice
               persistant_volume_claim_size: 100Mi
               storage_class: gp2
-              promote_env_list: sbox-nonprod
+              promote_env_list: sbox
               cd_pipeline_url: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
           - name: cartservice
             chart: buildah-build
@@ -27,7 +27,7 @@ pipelinenamespace:
               image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/cartservice
               persistant_volume_claim_size: 100Mi
               storage_class: gp2
-              promote_env_list: sbox-nonprod:dev-nonprod
+              promote_env_list: sbox:dev
               cd_pipeline_url: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
           - name: checkoutservice
             chart: buildah-build
@@ -115,13 +115,13 @@ pipelinenamespace:
             ##############
           - name: online-boutique-cd
             chart: gitops-micro-build
-            targetRevision: 4.0.5
+            targetRevision: 4.0.8
             values:
               name: online-boutique-cd-gitops-micro-build
               domain: apps.foster-rosa.rilh.p1.openshiftapps.com
               persistant_volume_claim_size: 100Mi
               storage_class: gp2
               protected_branches:
-              - sbox-nonprod
-              - dev-nonprod
-              - prd-prod
+              - sbox
+              - dev
+              - prd
