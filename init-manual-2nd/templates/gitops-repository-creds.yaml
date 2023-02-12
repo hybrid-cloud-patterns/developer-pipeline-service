@@ -122,5 +122,5 @@ metadata:
   namespace: openshift-gitops
 type: Opaque
 {{ end }} 
-{{- if .Values.github-azure }}
-{{ end }} 
+# {{- if .Values.github-azure }}
+# {{ end }} 
