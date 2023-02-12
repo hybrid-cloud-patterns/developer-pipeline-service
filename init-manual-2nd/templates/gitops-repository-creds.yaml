@@ -46,7 +46,7 @@ metadata:
   namespace: openshift-gitops
 type: Opaque
 {{ end }} 
-{{- if .Values.github }}
+{{- if .Values.github-azure }}
 ---
 apiVersion: v1
 data:
@@ -121,4 +121,6 @@ metadata:
   name: creds-3309232110
   namespace: openshift-gitops
 type: Opaque
+{{ end }} 
+{{- if .Values.github-azure }}
 {{ end }} 
