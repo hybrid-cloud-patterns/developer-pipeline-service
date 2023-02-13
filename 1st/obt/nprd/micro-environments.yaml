@@ -232,16 +232,16 @@ microenvironments:
             helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
             chartName: mssql-linux
             chartVersion: 0.2.0
-      - name: prd
-        labels: |
-          name: db-prd
-        microservices:
-          - name: mssql-payments
-            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
-            branch: prd-app-mssql
-            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
-            chartName: mssql-linux
-            chartVersion: 0.2.0
+      # - name: prd
+      #   labels: |
+      #     name: db-prd
+      #   microservices:
+      #     - name: mssql-payments
+      #       gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+      #       branch: prd-app-mssql
+      #       helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+      #       chartName: mssql-linux
+      #       chartVersion: 0.2.0
 
 
 
