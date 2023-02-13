@@ -1,4 +1,4 @@
 git:
-  repo: git@github.com:foster-rh/gitops.git
+  repo: git@github.com:redhat-blackbelt/gitops
   revision: main
-github-aws : true
+githubAwstemp : true

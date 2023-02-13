@@ -172,14 +172,14 @@ spec:
       do
         echo "Processing microservice - $micros"
         # #CHECK IF DEPLOY BRANCH EXISTS. IF NOT, CREATE IT LOCALLY
-        DEPLOY_BRANCH_EXISTS=$(GIT_SSH='/tmp/ssh' git ls-remote --heads "$(params.git_ssh_url)" $ENV-$TIER-$micros | wc -l)
+        DEPLOY_BRANCH_EXISTS=$(GIT_SSH='/tmp/ssh' git ls-remote --heads "$(params.git_ssh_url)" $ENV-$micros | wc -l)
         if [ $DEPLOY_BRANCH_EXISTS -eq 1 ]
         then
-          git checkout --track origin/$ENV-$TIER-$micros
+          git checkout --track origin/$ENV-$micros
           echo "Branch exists $ENV-$TIER-$micros, templating files and creating helm chart."
         else
-          git checkout -b $ENV-$TIER-$micros
-          echo "Checking out new branch $ENV-$TIER-$micros"
+          git checkout -b $ENV-$micros
+          echo "Checking out new branch $ENV-$micros"
         fi
         rm -rf *
         mkdir app
@@ -194,7 +194,7 @@ spec:
         git add -A
         git diff-index --quiet HEAD || git commit -m 'Updating microservice variables.'
         GIT_SSH='/tmp/ssh' git remote set-url --push origin "$(params.git_ssh_url)"
-        GIT_SSH='/tmp/ssh' git push origin $ENV-$TIER-$micros
+        GIT_SSH='/tmp/ssh' git push origin $ENV-$micros
       done
     workingDir: $(workspaces.output.path)
   workspaces:

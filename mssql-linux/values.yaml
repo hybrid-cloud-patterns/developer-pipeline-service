@@ -32,7 +32,7 @@ service:
   port: 1433
 
 pvc:
- StorageClass: managed-premium
+ StorageClass: gp2
  userdbaccessMode: ReadWriteOnce
  userdbsize: 1Gi
  userlogaccessMode: ReadWriteOnce
