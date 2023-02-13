@@ -25,3 +25,4 @@ appVersion: 1.16.0
 annotations:
   catalog.cattle.io/hidden: "true" # hide from Rancher catalog
 
+
