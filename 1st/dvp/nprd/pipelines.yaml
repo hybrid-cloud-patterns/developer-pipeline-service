@@ -6,7 +6,7 @@ pipelinenamespace:
         pipelines:
           - name: tek-pipe-hp
             chart: helm-promote
-            targetRevision: 4.0.5
+            targetRevision: 4.0.8
             values:
               name: tekton-pipeline-charts-helm-promote
               domain: apps.foster-rosa.rilh.p1.openshiftapps.com
@@ -17,7 +17,7 @@ pipelinenamespace:
               - main
           - name: argo-base-hp
             chart: helm-promote
-            targetRevision: 4.0.5
+            targetRevision: 4.0.8
             values:
               name: argocd-base-charts-helm-promote
               domain: apps.foster-rosa.rilh.p1.openshiftapps.com
