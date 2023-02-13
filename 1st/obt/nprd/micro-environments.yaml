@@ -231,7 +231,7 @@ microenvironments:
             branch: dev-app-mssql
             helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
             chartName: mssql-linux
-            chartVersion: 0.1.8
+            chartVersion: 0.2.0
       - name: prd
         labels: |
           name: db-prd
@@ -241,7 +241,7 @@ microenvironments:
             branch: prd-app-mssql
             helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
             chartName: mssql-linux
-            chartVersion: 0.1.8
+            chartVersion: 0.2.0
 
 
 
