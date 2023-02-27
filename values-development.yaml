@@ -57,6 +57,29 @@ clusterGroup:
       namespace: openshift-operators
       channel: stable-3.7
 
+    kiali-ossm:
+      channel: stable
+      name: kiali-ossm
+  
+    elasticsearch-operator:
+      channel: stable
+      name: elasticsearch-operator
+
+    servicemeshoperator:
+      name: servicemeshoperator
+      namespace: openshift-operators
+      channel: stable
+
+    # Subscription needs the following label:
+    #  operators.coreos.com/jaeger-product.openshift-distributed-tracing: ""
+    jaeger-product:
+      channel: stable
+      name: jaeger-product
+      
+    openshift-cert-manager-operator:
+      channel: tech-preview
+      name: openshift-cert-manager-operator
+
   projects:
     - secured
     - ci
