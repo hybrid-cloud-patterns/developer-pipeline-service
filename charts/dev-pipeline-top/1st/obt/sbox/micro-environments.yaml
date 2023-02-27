@@ -1,0 +1,136 @@
+repositories:
+  - https://gitlab.com/api/v4/projects/37447132/packages/helm/stable
+  - git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+
+microenvironments:
+  - name: ob
+    requests:
+      cpu: 30
+      memory: 22Gi
+    limits:
+      cpu: 30
+      memory: 22Gi
+    projects:
+      - name: sbox
+        labels: |
+          name: ob-sbox
+          argocd.argoproj.io/managed-by: openshift-gitops
+        istioIngressGateway:
+          targetRevision: 3.0.3
+          ingress_simple_gateways_enabled: true
+          ingress_simple_gateways_values:
+            - frontend-gateway: sbox.frontend.apps.foster-rosa.rilh.p1.openshiftapps.com|443|frontend-credential
+          mesh_policy: DISABLE
+        istioEgressGateway:
+          targetRevision: "3.0.7"
+          cp_namespace: ob-sm-cp
+          egress_passthrough_gateway_enabled: true
+          egress_passthrough_gateway_values:
+            - google-accounts: accounts.google.com|443
+            - google-metadata: metadata.google.internal|443
+          egress_wildcard_enabled: true
+          egress_wildcard_values:
+            - goodle-api: .googleapis.com|443
+        networkPolicies:
+          name: network-policies-kubernetes
+          targetRevision: 3.0.2
+          ingress:
+            - deny|true
+            - allow-ns-to-ns|same-namespace|name|'ob-sbox'|security.istio.io/tlsMode|'istio'|5050&8080&3550&7070&7000&50051&6379&9555&5000&80
+            - allow-ns-to-ns|istio-gateway|name|'ob-sm-cp'|app|'istio-ingressgateway'|80&8080
+        microservices:
+          - name: adservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-adservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: cartservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-cartservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: checkoutservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-checkoutservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: currencyservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-currencyservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: emailservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-emailservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: frontend
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-frontend
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: loadgenerator
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-loadgenerator
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: paymentservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-paymentservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: productcatalogservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-productcatalogservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: recommendationservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            branch: sbox-app-recommendationservice
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: shippingservice
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            branch: sbox-app-shippingservice
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            chartName: microservice-base
+            chartVersion: 3.1.6
+          - name: redis
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            branch: sbox-app-redis
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            chartName: microservice-base
+            chartVersion: 3.1.6
+
+  - name: db
+    requests:
+      cpu: 2
+      memory: 3Gi
+    limits:
+      cpu: 2
+      memory: 3Gi
+    projects:
+      - name: sbox
+        labels: |
+          name: db-sbox
+        microservices:
+          - name: mssql-payments
+            gitRepo: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+            branch: sbox-app-mssql
+            helmRepo: "https://gitlab.com/api/v4/projects/37447132/packages/helm/stable"
+            chartName: mssql-linux
+            chartVersion: 0.2.0
+
+
+
+ 

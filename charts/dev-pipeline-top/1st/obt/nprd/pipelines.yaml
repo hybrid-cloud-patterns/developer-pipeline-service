@@ -1,0 +1,127 @@
+pipelinenamespace:
+  - name: ob
+    ignoreResourceQuota: true
+    projects:
+      - name: pipelines
+        pipelines:
+            ##############
+            # CI PIPELINES
+            ##############
+          - name: adservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: adservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/adservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+              promote_env_list: sbox
+              cd_pipeline_url: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+          - name: cartservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: cartservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo/cartservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+              promote_env_list: sbox:dev
+              cd_pipeline_url: git@github.com:redhat-blackbelt-online-boutique/online-boutique-cd.git
+          - name: checkoutservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: checkoutservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/checkoutservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: currencyservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: currencyservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/currencyservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: emailservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: emailservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/emailservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: frontend
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: frontend
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/frontend
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: loadgenerator
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: loadgenerator
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/loadgenerator
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: paymentservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: paymentservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/paymentservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: productcatalogservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: productcatalogservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/productcatalogservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: recommendationservice
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: recommendationservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/recommendationservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+          - name: shippingservice-ci
+            chart: buildah-build
+            targetRevision: 4.0.8
+            values:
+              name: shippingservice
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              image: registry.gitlab.com/redhat-blackbelt/helm-repository/helm-repo-github/shippingservice
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+            ##############
+            # CD PIPELINES
+            ##############
+          - name: online-boutique-cd
+            chart: gitops-micro-build
+            targetRevision: 4.0.8
+            values:
+              name: online-boutique-cd-gitops-micro-build
+              domain: apps.foster-rosa.rilh.p1.openshiftapps.com
+              persistant_volume_claim_size: 100Mi
+              storage_class: gp2
+              protected_branches:
+              - sbox
+              - dev
+              - prd
