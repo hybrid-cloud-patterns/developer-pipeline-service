@@ -40,6 +40,7 @@ clusterGroup:
     - devsecops-ci
     - devsecops-dev
     - devsecops-qa
+    - pipeline-service
 
   subscriptions:
     rhacs-operator:
@@ -87,6 +88,7 @@ clusterGroup:
 #Adding jchraibi #advanced-devsecops to pattern framework
     - spring-petclinic
     - rollouts
+    - pipeline-service
 
   applications:
     acs-secured:
@@ -160,12 +162,13 @@ clusterGroup:
       project: ci
       path: charts/region/roxctl
 
-#Adding jchraibi #advanced-devsecops to pattern framework
-    staging-spring-petclinic:
-      name: staging-spring-petclinic
-      namespace: devsecops-qa
-      project: spring-petclinic
-      path: charts/region/stage/spring-petclinic-config
+    paul-pipeline-service:
+      name: pipeline-service-top
+      namespace: pipeline-service
+      project: pipeline-service
+      repoURL: https://github.com/redhat-blackbelt/gitops.git
+      path: 1st
+      targetRevision: main
 
 #  To have apps in multiple flavors, use namespaces and use helm overrides as appropriate
 #
