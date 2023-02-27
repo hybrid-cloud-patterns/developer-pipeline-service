@@ -41,6 +41,8 @@ clusterGroup:
     - devsecops-dev
     - devsecops-qa
     - pipeline-service
+    - openshift-distributed-tracing
+    - openshift-cert-manager-operator
 
   subscriptions:
     rhacs-operator:
