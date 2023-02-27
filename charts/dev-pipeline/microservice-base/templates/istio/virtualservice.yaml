@@ -1,0 +1,147 @@
+{{- if .Values.virtualService.enabled -}}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+    {{- with .Values.virtualService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  name: {{ include "app-charts.fullname" . }}-routing
+  labels:
+  {{- include "app-charts.labels" . | nindent 4 }}
+spec:
+  gateways:
+  - {{ .Values.virtualService.gateway }}
+  hosts:
+  - {{ .Values.virtualService.host }}
+  http:
+  # -- BLUE GREEN TESTING -- # 
+  {{- if .Values.blueGreen.enabled }}
+  # -- BLUE GREEN HEALTH -- # 
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_health }}
+      headers:
+        blue-green:
+          exact: green
+    rewrite:
+      uri: "/health"
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: green 
+    timeout: 60s
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_health }}
+      headers:
+        blue-green:
+          exact: blue
+    rewrite:
+      uri: "/health"
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: blue
+    timeout: 60s
+    # -- BLUE GREEN MICROSERVICE -- #
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_regex }}
+      headers:
+        blue-green:
+          exact: green
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: green 
+    timeout: 60s
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_regex }}
+      headers:
+        blue-green:
+          exact: blue
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: blue
+    timeout: 60s
+  {{- end }}
+    # -- HEALTH CHECK GET -- #
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_health }}
+    rewrite:
+      uri: "/health"
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+    {{- if .Values.blueGreen.enabled }}
+        subset: blue
+      weight: {{ .Values.blueGreen.blue.weight }}  
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: green
+      weight: {{ .Values.blueGreen.green.weight }}
+    {{- end }}
+    timeout: 60s
+  # -- Replicated vs code GET with retries -- #
+  - match:
+    - method:  
+        exact: GET
+      uri:
+        regex: {{ .Values.virtualService.uri_regex }}
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+    {{- if .Values.blueGreen.enabled }}
+        subset: blue
+      weight: {{ .Values.blueGreen.blue.weight }}  
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: green
+      weight: {{ .Values.blueGreen.green.weight }}
+    {{- end }}
+    retries:
+      attempts: 2
+      perTryTimeout: 10s
+      retryOn: gateway-error,connect-failure,refused-stream,retriable-4xx,5xx
+    timeout: 60s
+  # -- Replicated vs code NON GET no retries -- # 
+  - match:
+    - uri:
+        regex: {{ .Values.virtualService.uri_regex }}
+    route:
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+    {{- if .Values.blueGreen.enabled }}
+        subset: blue
+      weight: {{ .Values.blueGreen.blue.weight }}  
+    - destination:
+        host: {{ include "app-charts.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+        subset: green
+      weight: {{ .Values.blueGreen.green.weight }}
+    {{- end }}
+    timeout: 60s
+{{- end }}

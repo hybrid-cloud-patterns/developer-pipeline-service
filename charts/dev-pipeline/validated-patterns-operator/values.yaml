@@ -1,0 +1,8 @@
+main:
+  git:
+    repoURL: https://github.com/foster-rh/mcg
+    revision: main
+  gitops:
+    channel: "stable"
+  clusterGroupName: hub-cluster-nonprod
+Name: hub-cluster-nonprod

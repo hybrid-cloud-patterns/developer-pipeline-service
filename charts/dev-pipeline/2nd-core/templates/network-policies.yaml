@@ -1,0 +1,62 @@
+---
+{{ $team := .Values.team }}
+---
+{{ $defaults := .Values.defaults -}}
+---
+{{ range $env := .Values.microenvironments -}}
+---
+{{ range $ns := $env.projects -}}
+---
+{{- if $ns.networkPolicies }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $env.name }}-netpols-{{ $ns.name }}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: "{{ $team.name }}-{{ $team.tier }}-users"
+  source:
+    repoURL: "{{ $defaults.helmRepo }}"
+    targetRevision: "{{ $ns.networkPolicies.targetRevision }}"
+    chart: "network-policies-kubernetes"
+    path: ""
+    helm:
+      values: |
+        {{- if not $env.useNamespaceNameOnly }}
+        namespace: {{ $env.name }}-{{ $ns.name }}
+        {{- else }}
+        namespace: "{{ $ns.name }}"
+        {{- end }}
+        {{- toYaml $ns.networkPolicies | nindent 8 }}
+  destination:
+    server: "{{ $team.server }}"
+    {{- if not $env.useNamespaceNameOnly }}
+    namespace: {{ $env.name }}-{{ $ns.name }}
+    {{- else }}
+    namespace: "{{ $ns.name }}"
+    {{- end }}
+  syncPolicy:
+    automated: 
+      prune: false 
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=false 
+    retry:
+     limit: 5
+     backoff:
+       duration: 5s
+       factor: 2
+       maxDuration: 3m
+  ignoreDifferences:
+---
+{{ end }}
+---
+{{ end }}
+---
+{{ end }}
+---

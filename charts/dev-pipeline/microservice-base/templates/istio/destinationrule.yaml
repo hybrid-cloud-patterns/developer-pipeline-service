@@ -1,0 +1,15 @@
+{{- if .Values.blueGreen.enabled -}}
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ include "app-charts.fullname" . }}-routing
+spec:
+  host: {{ include "app-charts.fullname" . }}
+  subsets:
+  - name: green
+    labels:
+      version: green
+  - name: blue
+    labels:
+      version: blue
+{{- end }}

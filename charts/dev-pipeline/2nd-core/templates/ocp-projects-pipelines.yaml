@@ -1,0 +1,126 @@
+---
+{{ $team := .Values.team }}
+---
+{{ $defaults := .Values.defaults -}}
+---
+{{ range $pip := .Values.pipelinenamespace -}}
+---
+{{ range $ns := $pip.projects -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-{{ $pip.name }}-{{ $ns.name }}-pipelines"
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: "{{ $team.name }}-{{ $team.tier }}-users"
+  source:
+    repoURL: "{{ $defaults.helmRepo }}"
+    targetRevision: "3.1.9"
+    chart: "projects"
+    path: ""
+    helm:
+      parameters:
+        - name: "name"
+          value: "{{ $team.name }}"
+        - name: "tier"
+          value: "{{ $team.tier }}"
+        - name: "server"
+          value: "{{ $team.server }}"
+        - name: "project"
+          value: "{{ $team.name }}-{{ $team.tier }}-users"
+      values: |
+        adGroup: "{{ $team.adGroup }}"
+        projects:
+          {{- if not $pip.useProjectsNameOnly }}
+          - name: {{ $pip.name}}-{{ $ns.name }}
+          {{- else }}
+          - name: {{ $ns.name }}
+          {{- end }}
+            pipeline_secrets: true
+          {{- if $ns.labels }}
+            labels: |
+            {{- toYaml $ns.labels | trimPrefix "|" | indent 12 }}
+          {{- end }}
+          {{- if $pip.ignoreResourceQuota }}
+            ignoreResourceQuota: true
+          {{- else }}
+            requests:
+              cpu: {{ $pip.requests.cpu }}
+              memory: {{ $pip.requests.memory }}
+            limits:
+              cpu: {{ $pip.limits.cpu }}
+              memory: {{ $pip.limits.memory }}
+          {{- end }}
+
+          {{- if not $pip.disableFluentd }}
+          {{- if $ns.fluentd }}
+          {{- if $ns.fluentd.hecTokenName }}
+            tokenName: {{ $ns.fluentd.hecTokenName }}
+          {{- else }}
+            tokenName: splunk_hec_token_default
+          {{- end }}
+          {{- if $ns.fluentd.overrideConfig }}
+            override: {{ $ns.fluentd.overrideConfig }}
+            config: |
+{{ tpl (required "Config is required if override is true" $ns.fluentd.config) $ | indent 14 }}
+          {{- else if $ns.fluentd.config }}
+            config: |
+{{ tpl $ns.fluentd.config $ | indent 14 }}
+          {{- end }}
+          {{- else if $pip.fluentd }}
+          {{- if $pip.fluentd.hecTokenName }}
+            tokenName: {{ $pip.fluentd.hecTokenName }}
+          {{- else }}
+            tokenName: splunk_hec_token_default
+          {{- end }}
+          {{- if $pip.fluentd.overrideConfig }}
+            override: {{ $pip.fluentd.overrideConfig }}
+            config: |
+{{ tpl (required "Config is required if override is true" $pip.fluentd.config) $ | indent 14 }}
+          {{- else if $pip.fluentd.config }}
+            config: |
+{{ tpl $pip.fluentd.config $ | indent 14 }}
+          {{- end }}
+          {{- else }}
+            tokenName: splunk_hec_token_default
+          {{- end }}
+          {{- else }}
+            disableFluentd: true
+          {{- end }}
+          {{- end }}
+          {{- range $ns := $pip.projects }}
+          {{- range $app := $ns.apps }}
+          {{- range $app.extraProjects }}
+          - name: {{ $pip.name}}-{{ . }}
+            requests:
+              cpu: {{ $pip.requests.cpu }}
+              memory: {{ $pip.requests.memory }}
+            limits:
+              cpu: {{ $pip.limits.cpu }}
+              memory: {{ $pip.limits.memory }}
+          {{- end }}
+          {{- end }}
+  destination:
+    server: "{{ $team.server }}"
+  syncPolicy:
+    automated:
+      prune: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true 
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+{{ end }}
+---
+{{ end }}
+---

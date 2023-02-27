@@ -1,0 +1,157 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  annotations:
+    meta.helm.sh/release-name: init-manual-two
+    meta.helm.sh/release-namespace: default
+    tekton.dev/categories: promote-image
+    tekton.dev/displayName: promote-image
+    tekton.dev/pipelines.minVersion: 0.21.0
+    tekton.dev/platforms: linux/amd64,linux/s390x,linux/ppc64le
+    tekton.dev/tags: git
+  generation: 2
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/version: "0.3"
+    operator.tekton.dev/provider-type: community
+  name: custom-promote-image
+spec:
+  description: |-
+    This task can be used to perform git operations.
+  params:
+  - description: Folder to do the work in.
+    name: folder
+    type: string
+  - default: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
+    description: |
+      The base image for the task.
+    name: BASE_IMAGE
+    type: string
+  - description: The event type
+    name: object_kind
+    type: string
+  - description: The event type
+    name: action
+    type: string
+  - description: the git ssh url
+    name: git_ssh_url
+    type: string
+  - description: the tag value if in use.
+    name: ref
+    type: string
+  - description: the tag value if in use.
+    name: tag
+    type: string
+  - description: the tag value if in use.
+    name: tag_name
+    type: string
+  - description: the user name value if in use.
+    name: user_name
+    type: string
+  - description: the gitlab project id
+    name: project_id
+    type: string
+  - description: The name of the microservice
+    name: name
+    type: string
+  - description: The cd pipeline url to promote to
+    name: cd_pipeline_url
+    type: string
+  - name: promote_env_list
+    type: string
+  - default: root
+    description: Git user name for performing git operation.
+    name: GIT_USER_NAME
+    type: string
+  - default: root@graffiti.net
+    description: Git user email for performing git operation.
+    name: GIT_USER_EMAIL
+    type: string
+  steps:
+  - env:
+    - name: CHECKOUT_DIR
+      value: $(workspaces.output.path)
+    image: $(params.BASE_IMAGE)
+    name: promote
+    resources: {}
+    script: |
+      #!/usr/bin/env sh
+
+      echo "###############################################"
+      echo "###############################################"
+      if [ "$(params.action)" == "published" ]; then
+        branch="$(params.ref)"
+        tag="$(params.tag)"
+        echo "### object_kind = $(params.object_kind)"
+        echo "### action = $(params.action)"
+        echo "### tag = $(params.tag)"
+        echo "### tag_name = $(params.tag_name)"
+        echo "### action = $(params.action)"  
+        echo "### git_ssh_url = $(params.git_ssh_url)"
+        echo "### user_name = $(params.user_name)"
+        echo "### branch = $(params.ref)"
+        echo "### project_id = $(params.project_id)"
+        echo "### cd_pipeline_url = $(params.cd_pipeline_url)"
+        echo "### promote_env_list = $(params.promote_env_list)"
+      fi
+      echo "###############################################"
+      echo "###############################################"
+
+      set -eu
+      apk update
+      apk add gettext
+
+      git config --global user.email "$(params.GIT_USER_EMAIL)"
+      git config --global user.name "$(params.GIT_USER_NAME)"
+
+      # cleandir() {
+      #   # Delete any existing contents of the repo directory if it exists.
+      #   # We don't just "rm -rf ${CHECKOUT_DIR}\" because ${CHECKOUT_DIR} might be "/"
+      #   # or the root of a mounted volume.
+      #   if [ -d "${CHECKOUT_DIR}" ] ; then
+      #     # Delete non-hidden files and directories
+      #     rm -rf "${CHECKOUT_DIR:?}"/*
+      #     rm -rf "${CHECKOUT_DIR}"/*
+      #     # Delete files and directories starting with . but excluding ..
+      #     rm -rf "${CHECKOUT_DIR}"/.[!.]*
+      #     # Delete files and directories starting with .. plus any other character
+      #     rm -rf "${CHECKOUT_DIR}"/..?*
+      #   fi
+      # }
+      # cleandir
+      
+      echo "git $(params.cd_pipeline_url)"
+      echo 'ssh -i ~/.ssh/id_ssh-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $*' > /tmp/ssh
+      chmod +x /tmp/ssh
+    
+      # GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.cd_pipeline_url)"
+      # cd *
+      # pwd
+      # ls -alrt
+      cd /workspace/output/$(params.folder)
+      if [ -d custom-promote ]; then
+        rm -rf custom-promote
+      fi
+      mkdir custom-promote;cd custom-promote
+      GIT_TRACE=1 GIT_SSH='/tmp/ssh' git clone "$(params.cd_pipeline_url)" .
+
+      envs=$(echo $(params.promote_env_list) | tr ":" "\n")
+      echo "$(params.promote_env_list)"
+      for env in $envs
+      do
+        echo "Promoting to environment - $env"
+          git checkout $env
+          cd app-$(params.name)
+          echo "updating TAG to $tag in helm-values.conf for $(params.name)"
+          sed -i -e "s/export TAG\=.*/export TAG\=$tag/g" helm-values.conf
+          cd ..
+          git diff-index --quiet HEAD || git commit -a -m 'SINGLEMICRO:$(params.name)'
+          GIT_SSH='/tmp/ssh' git remote set-url --push origin "$(params.cd_pipeline_url)"
+          GIT_SSH='/tmp/ssh' git push origin $env
+          # sleep 120
+      done      
+    workingDir: $(workspaces.output.path)
+  workspaces:
+  - description: A workspace that contains the fetched git repository.
+    name: output
+

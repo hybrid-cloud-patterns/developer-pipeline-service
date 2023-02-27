@@ -1,0 +1,72 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: cleanup-task
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: cleanup-task
+spec:
+  description: >-
+    Delete the git folder for this pipeline run.
+  params:
+  - description: helm image to be used
+    name: folder
+    type: string
+  - default: docker.io/busybox
+    description: helm image to be used
+    name: image
+    type: string
+  - description: The event type
+    name: object_kind
+    type: string
+  - description: The event type on pull request 
+    name: action
+    type: string
+  - description: the git ssh url
+    name: git_ssh_url
+    type: string
+  - description: The source branch name
+    name: source_branch
+    type: string
+  - description: The target branch name
+    name: target_branch
+    type: string
+  - description: The commit sha
+    name: merge_commit_sha
+    type: string
+  - description: User name who generated pipeline.
+    name: user_name
+    type: string
+  - description: the gitlab project id
+    name: project_id
+    type: string
+  - description: the gitlab project id
+    name: ref
+    type: string
+  steps:
+  - name: dummy
+    image: $(params.image)
+    resources: {}
+    script: |
+      echo "###############################################"
+      echo "###############################################"
+      echo "### project_id = $(params.project_id)"
+      echo "### user_name = $(params.user_name)"
+      echo "### object_kind = $(params.object_kind)"
+      echo "### action = $(params.action)"
+      echo "### git_ssh_url = $(params.git_ssh_url)"
+      echo "### source_branch = $(params.source_branch)"
+      echo "### target_branch = $(params.target_branch)"
+      echo "### merge_commit_sha = $(params.merge_commit_sha)"
+      echo "### ref = $(params.ref)"
+      echo "### folder = $(params.folder)"
+      echo "###############################################"
+      echo "###############################################"
+      ls -alrt /workspace/output
+      ls -alrt /workspace/output/$(params.folder)
+      rm -rf /workspace/output/$(params.folder)
+      echo completed
+  workspaces:
+  - name: output

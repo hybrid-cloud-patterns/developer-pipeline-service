@@ -1,0 +1,39 @@
+---
+{{ $team := .Values.team -}}
+---
+{{ $repos := .Values.repositories -}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: "{{ $team.name }}-{{ $team.tier }}-admin"
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: "{{ $team.name }}-{{ $team.tier }} admin deployment apps"
+  sourceRepos:
+  {{- range $repos }}
+    - {{ . | quote }}
+  {{- end }}
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  destinations:
+    - namespace: '*'
+      server: "{{ $team.server }}"
+    - namespace: "openshift-gitops"
+      server: "https://kubernetes.default.svc"
+  roles:
+    - name: admin
+      description: "admin privilleges for project {{ $team.name }}-{{ $team.tier }}-admin"
+      policies:
+        - "p, proj:{{ $team.name }}-{{ $team.tier }}-admin:admin, applications, *, {{ $team.name }}-{{ $team.tier }}-admin/*, allow"
+      groups:
+        - "APP.ARGO.ADMIN.ADMIN.GG"
+    # - name: admin-deny
+    #   description: "Application teams privilleges for project {{ $team.name }}-{{ $team.tier }}-users"
+    #   policies:
+    #     - "p, proj:{{ $team.name }}-{{ $team.tier }}-admin:admin-deny, applications, *, {{ $team.name }}-{{ $team.tier }}-admin/*, deny"
+    #   groups:
+    #     - "{{ $team.adGroup }}"

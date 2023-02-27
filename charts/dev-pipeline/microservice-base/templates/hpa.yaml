@@ -1,0 +1,42 @@
+{{- if .Values.autoscaling.enabled }}
+  {{- if or (.Values.blueGreen.blue.enabled) (not .Values.blueGreen.enabled) }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  {{- if .Values.blueGreen.enabled }}
+  name: {{ include "app-charts.fullname" . }}-blue
+  {{ else }}
+  name: {{ include "app-charts.fullname" . }}
+  {{- end }}
+  labels:
+    {{- include "app-charts.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    {{- if .Values.blueGreen.enabled }}
+    name: {{ include "app-charts.fullname" . }}-blue
+    {{ else }}
+    name: {{ include "app-charts.fullname" . }}
+    {{- end }}
+  minReplicas: {{ .Values.blueGreen.blue.minReplicas | default .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.blueGreen.blue.maxReplicas | default .Values.autoscaling.maxReplicas }}
+  metrics:
+  {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+  {{- end }}
+  {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+  {{- end }}
+{{- end }}

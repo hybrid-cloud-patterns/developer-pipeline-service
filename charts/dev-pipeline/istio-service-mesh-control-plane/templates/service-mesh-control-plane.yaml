@@ -1,0 +1,45 @@
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: {{ .Values.settings.name }}
+  labels:
+    istio: {{ .Values.settings.name }}
+spec:
+  tracing:
+    type: Jaeger
+    sampling: 10000
+  gateways:
+    {{- if .Values.settings.gateways.egress.enabled }}
+    egress:
+        enabled: {{ .Values.settings.gateways.egress.enabled }}
+    {{- end }}
+    ingress:
+      enabled: true
+      service: {}
+  policy:
+    type: Istiod
+  addons:
+    grafana:
+      enabled: true
+    jaeger:
+      install:
+        storage:
+          type: Memory
+    kiali:
+      enabled: true
+      name: kiali
+    prometheus:
+      enabled: true
+  telemetry:
+    type: Istiod
+  version: {{ .Values.settings.version }}
+  security:
+    identity:
+      type: ThirdParty
+      thirdParty:
+        audience: istio-ca
+  techPreview:
+    meshConfig:
+      accessLogEncoding: JSON
+      accessLogFile: /dev/stdout
+---

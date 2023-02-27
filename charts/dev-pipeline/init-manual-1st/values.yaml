@@ -1,0 +1,4 @@
+projects:
+  - name: openshift-distributed-tracing
+  - name: openshift-cert-manager-operator
+  - name: rhacs-operator

@@ -1,0 +1,4 @@
+apiVersion: v2
+description: A Helm chart to deploy a second argocd instance.
+name: argocd-hub
+version: 0.0.1

@@ -1,0 +1,81 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  annotations:
+    tekton.dev/categories: Deployment
+    tekton.dev/platforms: linux/amd64,linux/s390x,linux/ppc64le,linux/arm64
+    tekton.dev/tags: helm
+  labels:
+    app.kubernetes.io/version: "0.3"
+    operator.tekton.dev/provider-type: community
+  name: custom-helm-load
+spec:
+  description: These tasks will install / upgrade a helm chart into your Kubernetes
+    / OpenShift Cluster using Helm
+  params:
+  - description: Folder to do the work in.
+    name: folder
+    type: string
+  - description: The helm repo to upload to - add repo
+    name: helm_repo_url
+    type: string
+  - default: docker.io/lachlanevenson/k8s-helm@sha256:5c792f29950b388de24e7448d378881f68b3df73a7b30769a6aa861061fd08ae
+    description: helm image to be used
+    name: helm_image
+    type: string
+  - description: The event type
+    name: object_kind
+    type: string
+  - description: the git ssh url
+    name: git_ssh_url
+    type: string
+  - description: The commit sha
+    name: merge_commit_sha
+    type: string
+  - description: the tag value if in use.
+    name: ref
+    type: string
+  - description: User name who generated pipeline.
+    name: user_name
+    type: string
+  - description: the gitlab project id
+    name: project_id
+    type: string
+  steps:
+  - image: $(params.helm_image)
+    name: upload
+    resources: {}
+    script: |
+      echo "###############################################"
+      echo "###############################################"
+      echo "### object_kind = $(params.object_kind)"
+      echo "### git_ssh_url = $(params.git_ssh_url)"
+      echo "### user_name = $(params.user_name)"
+      echo "### merge_commit_sha = $(params.merge_commit_sha)"
+      echo "### branch = $(params.ref)"
+      echo "### project_id = $(params.project_id)"
+      echo "###############################################"
+      echo "###############################################"
+      cd /workspace/output/$(params.folder)/base
+      apk add git
+      helm plugin install https://github.com/chartmuseum/helm-push
+      helm repo add --username pafoster --password glpat-rhvriFVzgsku7BVsspcT helm-repo $(params.helm_repo_url)
+      ls -lart 
+      for directory in */; do
+        name=$(cat $directory/Chart.yaml | grep '^name:'| awk '{print $2}')
+        version=$(cat $directory/Chart.yaml | grep '^version:'| awk '{print $2}')
+        echo "Building ${name}-${version}"
+        var=`helm search repo $name --version $version`
+        if [[ "$var" == "No results found" ]]; then
+          echo "Chart not found -- uploading.."
+          echo "packaging -> helm package $name $name --version $version"
+          helm package $name $name --version $version
+          echo "uploading -> helm cm-push $name-$version.tgz helm-repo"
+          helm cm-push $name-$version.tgz helm-repo
+        else
+          echo "already exists -- update helm chart to upload"  
+        fi
+      done
+  workspaces:
+  - name: output
+

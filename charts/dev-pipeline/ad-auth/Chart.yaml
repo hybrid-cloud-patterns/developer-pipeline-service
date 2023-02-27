@@ -1,0 +1,4 @@
+name: ad-auth
+description: Sets up the AD auth to the cluster to sync groups etc.
+apiVersion: v2
+version: 0.0.1
